@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Identity & Duplicate Detection Assistant</title>
+    <style>
+        :root {
+            --primary: #0052CC;
+            --primary-hover: #0073e6;
+            --bg: #f4f5f7;
+            --card-bg: #ffffff;
+            --text: #172B4D;
+            --border: #DFE1E6;
+            --success: #36B37E;
+            --warning: #FFAB00;
+            --danger: #FF5630;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #5E6C84;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #EBECF0;
+            color: #42526E;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #DFE1E6;
+        }
+
+        .sample-btn {
+            background-color: #EBECF0;
+            color: #42526E;
+            padding: 6px 12px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            display: inline-block;
+        }
+
+        .sample-btn:hover {
+            background-color: #DFE1E6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background-color: #E3FCEF; color: #006644; }
+        .badge-warning { background-color: #FFFAE6; color: #825C00; }
+        .badge-danger { background-color: #FFEBE6; color: #BF2600; }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F4F5F7;
+            gap: 16px;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 500;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .overall-box {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .overall-success { background-color: #E3FCEF; border: 1px solid var(--success); color: #006644; }
+        .overall-warning { background-color: #FFFAE6; border: 1px solid var(--warning); color: #825C00; }
+        .overall-danger { background-color: #FFEBE6; border: 1px solid var(--danger); color: #BF2600; }
+
+        .explanation-box {
+            background-color: #F4F5F7;
+            border-left: 4px solid #97A0AF;
+            padding: 12px 16px;
+            margin-top: 16px;
+            border-radius: 0 4px 4px 0;
+            font-size: 13px;
+        }
+
+        .explanation-box h4 {
+            margin: 0 0 6px 0;
+            color: #42526E;
+        }
+
+        .explanation-box p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Company Identity & Duplicate Detection Assistant</h1>
+        <p class="subtitle">Sales Operations First-Pass Account Request Validation Tool (Prototype)</p>
+    </header>
+
+    <div class="grid">
+        <!-- Input Panel -->
+        <div class="card">
+            <h2>1. Input Account Details</h2>
+            
+            <div style="margin-bottom: 16px;">
+                <span style="font-size: 12px; font-weight: bold; color: #5E6C84; display: block; margin-bottom: 8px;">QUICK TEST SCENARIOS:</span>
+                <button type="button" class="sample-btn" onclick="loadSample('consistent')">1. Consistent Request</button>
+                <button type="button" class="sample-btn" onclick="loadSample('duplicate')">2. Potential Duplicate</button>
+                <button type="button" class="sample-btn" onclick="loadSample('mismatch')">3. Country Mismatch</button>
+                <button type="button" class="sample-btn" onclick="loadSample('similarName')">4. Similar Name / Diff Web</button>
+                <button type="button" class="sample-btn" onclick="loadSample('subsidiary')">5. Potential Subsidiary</button>
+            </div>
+
+            <form id="validationForm" onsubmit="validateRequest(event)">
+                <div class="form-group">
+                    <label for="accountName">Account / Company Name</label>
+                    <input type="text" id="accountName" placeholder="e.g., Acme Corporation LLC" required>
+                </div>
+                <div class="form-group">
+                    <label for="website">Company Website</label>
+                    <input type="text" id="website" placeholder="e.g., www.acme.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" required>
+                        <option value="">-- Select Country --</option>
+                        <option value="US">United States (US)</option>
+                        <option value="GB">United Kingdom (GB)</option>
+                        <option value="DE">Germany (DE)</option>
+                        <option value="SG">Singapore (SG)</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn-primary">Run Validation Check</button>
+                    <button type="button" class="btn-secondary" onclick="resetForm()">Clear</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="card">
+            <h2>2. Validation Results</h2>
+            <div id="placeholderText" style="color: #5E6C84; text-align: center; padding: 40px 0;">
+                Enter account details on the left and click "Run Validation Check" to see results.
+            </div>
+            
+            <div id="resultsContent" style="display: none;">
+                <div id="overallResult" class="overall-box">
+                    LOOKS CONSISTENT
+                </div>
+
+                <div class="result-row">
+                    <span class="result-label">Company Identity Consistency</span>
+                    <span id="identityBadge" class="badge">Consistent</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Potential Duplicate Match</span>
+                    <span id="duplicateBadge" class="badge">No Match</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Website/Name Similarity</span>
+                    <span id="similarityBadge" class="badge">High Match</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Country Consistency</span>
+                    <span id="countryBadge" class="badge">Consistent</span>
+                </div>
+
+                <div class="explanation-box">
+                    <h4 id="explanationTitle">Analysis Summary</h4>
+                    <p id="explanationText">No issues detected. The request is ready for standard processing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fictional CRM Database for Duplicate Checking
+    const mockDatabase = [
+        { id: "ACC-001", name: "Acme Corporation", website: "acme.com", country: "US" },
+        { id: "ACC-002", name: "Apex Global Solutions", website: "apexglobal.com", country: "GB" },
+        { id: "ACC-003", name: "Vertex Technologies", website: "vertextech.de", country: "DE" }
+    ];
+
+    function loadSample(type) {
+        // Clear previous results first, but do not reset inputs until values are loaded
+        document.getElementById('placeholderText').style.display = 'block';
+        document.getElementById('resultsContent').style.display = 'none';
+
+        if (type === 'consistent') {
+            document.getElementById('accountName').value = "Horizon Logistics Ltd";
+            document.getElementById('website').value = "www.horizonlogistics.com";
+            document.getElementById('country').value = "US";
+        } else if (type === 'duplicate') {
+            document.getElementById('accountName').value = "Acme Corp LLC";
+            document.getElementById('website').value = "https://www.acme.com/";
+            document.getElementById('country').value = "US";
+        } else if (type === 'mismatch') {
+            document.getElementById('accountName').value = "Vertex Technologies";
+            document.getElementById('website').value = "www.vertextech.de";
+            document.getElementById('country').value = "US";
+        } else if (type === 'similarName') {
+            document.getElementById('accountName').value = "Acme Services Inc";
+            document.getElementById('website').value = "www.acmeservices.com";
+            document.getElementById('country').value = "US";
+        } else if (type === 'subsidiary') {
+            document.getElementById('accountName').value = "Acme UK Ltd";
+            document.getElementById('website').value = "acme.com";
+            document.getElementById('country').value = "GB";
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('validationForm').reset();
+        document.getElementById('placeholderText').style.display = 'block';
+        document.getElementById('resultsContent').style.display = 'none';
+    }
+
+    // Helper function to normalize domains for robust comparison
+    function normalizeDomain(url) {
+        if (!url) return "";
+        let domain = url.trim().toLowerCase();
+        // Remove protocol
+        domain = domain.replace(/^(https?:\/\/)?(www\.)?/, "");
+        // Remove trailing slash and trailing dot
+        domain = domain.replace(/\/+$/, "");
+        domain = domain.replace(/\.+$/, "");
+        // Extract only the host part (ignore paths)
+        domain = domain.split('/')[0];
+        return domain;
+    }
+
+    function validateRequest(event) {
+        // Prevent browser from reloading the page on form submission
+        if (event) {
+            event.preventDefault();
+        }
+        
+        const name = document.getElementById('accountName').value.trim();
+        const website = document.getElementById('website').value.trim();
+        const country = document.getElementById('country').value;
+
+        // Normalize inputs
+        const cleanWeb = normalizeDomain(website);
+        
+        if (!cleanWeb.includes('.')) {
+            renderInvalidUrlResult();
+            return;
+        }
+
+        let duplicateFound = false;
+        let countryMismatch = false;
+        let nameSimilarityIssue = false;
+        let potentialSubsidiary = false;
+        let matchedRecord = null;
+        let similarityRecord = null;
+
+        // 1. Check Mock Database for Potential Duplicates & Subsidiaries
+        for (let record of mockDatabase) {
+            const recordCleanWeb = normalizeDomain(record.website);
+            
+            const websiteMatches = (cleanWeb === recordCleanWeb);
+            const nameIsHighlySimilar = name.toLowerCase().includes(record.name.toLowerCase()) || record.name.toLowerCase().includes(name.toLowerCase());
+
+            if (websiteMatches) {
+                duplicateFound = true;
+                matchedRecord = record;
+                // If website matches but country is different, flag as potential subsidiary
+                if (record.country !== country) {
+                    potentialSubsidiary = true;
+                }
+                break;
+            } else if (nameIsHighlySimilar && !websiteMatches) {
+                // Similar name but different website -> Flag for review, NOT a duplicate
+                nameSimilarityIssue = true;
+                similarityRecord = record;
+            }
+        }
+
+        // 2. Check Country Consistency against Website TLD (Signal Only)
+        const tld = cleanWeb.split('.').pop();
+        if (tld === 'de' && country !== 'DE') {
+            countryMismatch = true;
+        } else if (tld === 'us' && country !== 'US') {
+
+countryMismatch = true;
+        } else if (tld === 'uk' && country !== 'GB') {
+            countryMismatch = true;
+        }
+
+        // 3. Check Website/Name Similarity
+        const domainName = cleanWeb.split('.')[0];
+        const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (!cleanName.includes(domainName) && !domainName.includes(cleanName.substring(0, 5))) {
+            nameSimilarityIssue = true;
+        }
+
+        // Render Results
+        document.getElementById('placeholderText').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+
+        const overallDiv = document.getElementById('overallResult');
+        const identityBadge = document.getElementById('identityBadge');
+        const duplicateBadge = document.getElementById('duplicateBadge');
+        const similarityBadge = document.getElementById('similarityBadge');
+        const countryBadge = document.getElementById('countryBadge');
+        const expTitle = document.getElementById('explanationTitle');
+        const expText = document.getElementById('explanationText');
+
+        // Reset Badges to default
+        identityBadge.className = "badge badge-success"; identityBadge.innerText = "Consistent";
+        duplicateBadge.className = "badge badge-success"; duplicateBadge.innerText = "No Match";
+        similarityBadge.className = "badge badge-success"; similarityBadge.innerText = "High Match";
+        countryBadge.className = "badge badge-success"; countryBadge.innerText = "Consistent";
+
+        // Update individual badges
+        if (duplicateFound) {
+            duplicateBadge.className = "badge badge-danger";
+            duplicateBadge.innerText = potentialSubsidiary 
+                ? `Potential Subsidiary — ${matchedRecord.id} — ${matchedRecord.name.toUpperCase()}` 
+                : `Potential Match — ${matchedRecord.id} — ${matchedRecord.name.toUpperCase()}`;
+        }
+        if (countryMismatch) {
+            countryBadge.className = "badge badge-warning";
+            countryBadge.innerText = "Signal Differs";
+        }
+        if (nameSimilarityIssue) {
+            similarityBadge.className = "badge badge-warning";
+            similarityBadge.innerText = "Low Match";
+        }
+
+        // Determine overall result and explanation text
+        if (duplicateFound) {
+            if (potentialSubsidiary) {
+                overallDiv.className = "overall-box overall-warning";
+                overallDiv.innerText = "REVIEW REQUIRED";
+                expTitle.innerText = "Potential Subsidiary Detected";
+                expText.innerHTML = `This request shares a website domain with an existing record: <strong>${matchedRecord.id} — ${matchedRecord.name} (${matchedRecord.country})</strong>, but is requested in a different country (<strong>${country}</strong>). 
+
+
+
+<strong>Next Step:</strong> Do not create a new standalone account. Verify if this is a regional subsidiary and link it to the parent account using your CRM's account hierarchy.`;
+            } else {
+                overallDiv.className = "overall-box overall-danger";
+                overallDiv.innerText = "POTENTIAL DUPLICATE";
+                expTitle.innerText = "Action Required: Potential Duplicate Detected";
+                expText.innerHTML = `This request closely matches an existing record in the database: <strong>${matchedRecord.id} — ${matchedRecord.name} (${matchedRecord.website})</strong>. 
+
+
+
+<strong>Next Step:</strong> Search for the existing account in your CRM database. If it is a duplicate request, reject or merge it.`;
+            }
+        } else if (countryMismatch) {
+            overallDiv.className = "overall-box overall-warning";
+            overallDiv.innerText = "REVIEW REQUIRED";
+            expTitle.innerText = "Review Required – website country signal differs from selected country.";
+            expText.innerHTML = `Website country signal differs from selected country. The TLD (.${tld}) is only a signal and does not confirm the company's actual HQ or legal country. 
+
+
+
+<strong>Next Step:</strong> Verify the company's actual legal registration address or HQ location on their official website (e.g., "Contact Us" or "About Us" page) to confirm the correct country selection.`;
+        } else if (nameSimilarityIssue) {
+            overallDiv.className = "overall-box overall-warning";
+            overallDiv.innerText = "REVIEW REQUIRED";
+            expTitle.innerText = "Action Required: Name & Domain Mismatch";
+            
+            if (similarityRecord) {
+                expText.innerHTML = `The company name (<strong>${name}</strong>) is highly similar to an existing account: <strong>${similarityRecord.id} — ${similarityRecord.name}</strong>, but the website domain (<strong>${website}</strong>) is different. 
+
+
+
+<strong>Next Step:</strong> Confirm that the website provided belongs to this specific legal entity and is not a generic domain or a different company.`;
+            } else {
+                expText.innerHTML = `The company name (<strong>${name}</strong>) does not appear to align with the website domain (<strong>${website}</strong>). 
+
+
+
+<strong>Next Step:</strong> Confirm that the website provided belongs to this specific legal entity and is not a generic domain or a different company.`;
+            }
+        } else {
+            overallDiv.className = "overall-box overall-success";
+            overallDiv.innerText = "LOOKS CONSISTENT";
+            expTitle.innerText = "Validation Passed";
+            expText.innerText = "No immediate duplicates or inconsistencies were flagged. This request is ready for standard processing.";
+        }
+    }
+
+    function renderInvalidUrlResult() {
+        document.getElementById('placeholderText').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+        
+        document.getElementById('overallResult').className = "overall-box overall-warning";
+        document.getElementById('overallResult').innerText = "REVIEW REQUIRED";
+        
+        document.getElementById('identityBadge').className = "badge badge-warning";
+        document.getElementById('identityBadge').innerText = "Invalid URL";
+        
+        document.getElementById('explanationTitle').innerText = "Action Required: Incomplete Website URL";
+        document.getElementById('explanationText').innerHTML = `The website entered does not appear to be a valid domain (e.g., missing a top-level domain extension like .com, .net, or .org). 
+
+
+
+<strong>Next Step:</strong> Double-check the website URL and ensure it is entered correctly before running the validation check again.`;
+    }
+</script>
+
+</body>
+</html>
